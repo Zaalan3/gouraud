@@ -91,19 +91,199 @@ _DivideHLBC:
 .next1:
 	add	hl,de
 	rra
-	ld	a,24
 .loop:
 	ex	de,hl
 	adc	hl,hl
 	ex	de,hl
 	adc	hl,hl
 	add	hl,bc
-	jr	c,.spill
+	jr	c,.spill1
 	sbc	hl,bc
-.spill:
-	dec	a
-	jr	nz,.loop
-
+.spill1:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill2
+	sbc	hl,bc
+.spill2:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill3
+	sbc	hl,bc
+.spill3:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill4
+	sbc	hl,bc
+.spill4:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill5
+	sbc	hl,bc
+.spill5:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill6
+	sbc	hl,bc
+.spill6:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill7
+	sbc	hl,bc
+.spill7:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill8
+	sbc	hl,bc
+.spill8:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill9
+	sbc	hl,bc
+.spill9:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill10
+	sbc	hl,bc
+.spill10:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill11
+	sbc	hl,bc
+.spill11:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill12
+	sbc	hl,bc
+.spill12:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill13
+	sbc	hl,bc
+.spill13:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill14
+	sbc	hl,bc
+.spill14:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill15
+	sbc	hl,bc
+.spill15:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill16
+	sbc	hl,bc
+.spill16:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill17
+	sbc	hl,bc
+.spill17:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill18
+	sbc	hl,bc
+.spill18:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill19
+	sbc	hl,bc
+.spill19:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill20
+	sbc	hl,bc
+.spill20:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill21
+	sbc	hl,bc
+.spill21:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill22
+	sbc	hl,bc
+.spill22:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill23
+	sbc	hl,bc
+.spill23:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,.spill24
+	sbc	hl,bc
+.spill24:
 	ex	de,hl
 	adc	hl,hl
 	ret	c
@@ -111,6 +291,7 @@ _DivideHLBC:
 	sbc	hl,hl
 	sbc	hl,de
 	ret
+
 	
 ;------------------------------------------------
 _fxtoi: 
@@ -128,7 +309,9 @@ _fxtoi:
 	ld l,e 
 	ret 
 	
-;------------------------------------------------
+	
+	
+	
 _fxMul: 
 	pop de 
 	pop hl 
@@ -137,14 +320,14 @@ _fxMul:
 	push de 
 	push de 
 _fixedHLmulBC:
-	ld a,0B7h
+	ld a,0C9h	; alternate between 0(nop) and C9h(ret) 
 	ex de,hl 
 	or a,a 
 	sbc hl,hl 
 	sbc hl,de 
 	jp m,noswapHLDE
 	ex de,hl 
-	xor a,080h
+	xor a,0C9h
 noswapHLDE: 
 	or a,a 
 	sbc hl,hl 
@@ -152,126 +335,48 @@ noswapHLDE:
 	jp m,noswapHLBC
 	push hl 
 	pop bc
-    xor a,080h
+    xor a,0C9h
 noswapHLBC:  
 	ld (MultSMC),a
-	or a,a 
-	sbc hl,hl 
-
-	ld a,b 
-	
-	rla 
-	jr nc,cont1
-	add hl,de 
-cont1:
-	add hl,hl
-	
-	rla 
-	jr nc,cont2
-	add hl,de 
-cont2:
-	add hl,hl
-	
-	rla 
-	jr nc,cont3
-	add hl,de 
-cont3:
-	add hl,hl
-	
-	rla 
-	jr nc,cont4
-	add hl,de 
-cont4:
-	add hl,hl
-	
-	rla 
-	jr nc,cont5
-	add hl,de 
-cont5:
-	add hl,hl
-	
-	rla 
-	jr nc,cont6
-	add hl,de 
-cont6:
-	add hl,hl
-	
-	rla 
-	jr nc,cont7
-	add hl,de 
-cont7:
-	add hl,hl
-	
-	rla 
-	jr nc,cont8
-	add hl,de 
-cont8:
-	add hl,hl
-	
-	ld a,c 
-
-	rla 
-	jr nc,cont9
-	add hl,de 
-cont9:
-	add hl,hl
-	
-	rla 
-	jr nc,cont10
-	add hl,de 
-cont10:
-	add hl,hl
-	
-	rla 
-	jr nc,cont11
-	add hl,de 
-cont11:
-	add hl,hl
-	
-	rla 
-	jr nc,cont12
-	add hl,de 
-cont12:
-	add hl,hl
-	
-	rla 
-	jr nc,cont13
-	add hl,de 
-cont13:
-	add hl,hl
-	
-	rla 
-	jr nc,cont14
-	add hl,de 
-cont14:
-	add hl,hl
-	
-	rla 
-	jr nc,cont15
-	add hl,de 
-cont15:
-	add hl,hl
-	
-	rla 
-	jr nc,shiftDown 
-	add hl,de 
-	
-shiftDown: 
-	push af 
-	inc sp 
-	push hl 
-	inc sp 
-	pop hl 
-	inc sp 
-MultSMC: or a,a 
-	ret nc 
 	ex de,hl 
+	
+	ld d,l 
+	ld e,c 
+	mlt de 
+	ld a,d 
+	ex af,af' 
+	ld a,c 
+	ld c,l 
+	ld l,a 
+	ld d,h 
+	ld e,b 
+	mlt bc 
+	mlt de 
+	mlt hl 
+	ex af,af' 
+	add a,l 
+	ld l,a
+	ld a,h 
+	adc a,0
+	ld h,a 
+	add hl,bc 
+	ex de,hl 
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,de
+MultSMC: ret 
+	ex de,hl
 	or a,a 
 	sbc hl,hl 
 	sbc hl,de 
-	ret
-	
-	
+	ret 
+		
 ;------------------------------------------------
 _fxDiv:
 	pop de 
@@ -307,19 +412,206 @@ next0:
 next1:
 	add	hl,de
 	rra
-	ld	a,24
 loop:
 	ex	de,hl
 	adc	hl,hl
 	ex	de,hl
 	adc	hl,hl
 	add	hl,bc
-	jr	c,spill
+	jr	c,spill1
 	sbc	hl,bc
-spill:
-	dec	a
-	jr	nz,loop
-
+spill1:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill2
+	sbc	hl,bc
+spill2:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill3
+	sbc	hl,bc
+spill3:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill4
+	sbc	hl,bc
+spill4:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill5
+	sbc	hl,bc
+spill5:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill6
+	sbc	hl,bc
+spill6:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill7
+	sbc	hl,bc
+spill7:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill8
+	sbc	hl,bc
+spill8:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill9
+	sbc	hl,bc
+spill9:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill10
+	sbc	hl,bc
+spill10:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill11
+	sbc	hl,bc
+spill11:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill12
+	sbc	hl,bc
+spill12:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill13
+	sbc	hl,bc
+spill13:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill14
+	sbc	hl,bc
+spill14:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill15
+	sbc	hl,bc
+spill15:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill16
+	sbc	hl,bc
+spill16:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill17
+	sbc	hl,bc
+spill17:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill18
+	sbc	hl,bc
+spill18:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill19
+	sbc	hl,bc
+spill19:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill20
+	sbc	hl,bc
+spill20:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill21
+	sbc	hl,bc
+spill21:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill22
+	sbc	hl,bc
+spill22:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill23
+	sbc	hl,bc
+spill23:
+	ex	de,hl
+	adc	hl,hl
+	ex	de,hl
+	adc	hl,hl
+	add	hl,bc
+	jr	c,spill24
+	sbc	hl,bc
+spill24:
+	ex	de,hl
+	adc	hl,hl
+	ret	c
+	ex	de,hl
+	sbc	hl,hl
+	sbc	hl,de
+	ret
 	ex	de,hl
 	adc	hl,hl
 	ret	c

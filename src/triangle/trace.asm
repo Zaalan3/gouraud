@@ -15,20 +15,20 @@ y1 equ (iy+9)
 ; fills edge buffer 
 ;in: a = 0 -> fill left buffer (  ) 
 ; OR a = 1 -> fill right buffer (  ) 
-;	bc = ix offset for line 
+; bc = ptr to points
 ;
 _fill: 
-	
+	push iy 
+	push bc 
+	pop iy 
 	ld (SMCbuffer+2),a 
 	ld (SMCbuffer2+2),a
-	lea iy,ix+0 
-	add iy,bc
 dy: 
 	ld hl,(y1) 
 	ld de,(y0) 
 	or a,a 
 	sbc hl,de 
-	ret z 
+	jp z,endfill
 	ex de,hl ; de = dy 
 dx: 
 	ld a,03h	; inc bc 
@@ -116,6 +116,9 @@ endxloop:
 	
 	dec a 
 	jr nz,yloop
+	
+endfill:
+	pop iy
 	ret
 ;-------------------------------------------
 find0: 
@@ -197,6 +200,8 @@ s_storeEdge:
 SMCbuffer2: ld (iy+0),l ; store in edge buffer 
 	lea iy,iy+2 
 	djnz SMCbuffer2
+	
+	pop iy
 	ret 
 	
 	

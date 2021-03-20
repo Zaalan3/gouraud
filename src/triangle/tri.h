@@ -3,18 +3,30 @@
 
 #include "vectormath/vectormath.h" 
 
-// edge buffer for current triangle 
-uint8_t edge[80][2]; 
+#define TYPE_NULL 0
+#define TYPE_TEXTURED 1
+#define TYPE_GOURAUD 2
 
+typedef struct 
+{ 
+	uint8_t type; 
+	Vec2 p0,p1,p2; 
+	uint8_t l0,l1,l2; 
+	uint8_t u0,v0; 
+	int uw,vh; 
+} triangle_data_t; 
+
+void initRasterizer(void); 
+
+#define loadTextureMap(ptr) memcpy((void *)0xD48000,(void *)ptr,32*1024)
+#define loadTextureMapCompressed(ptr) zx7_Decompress((void *)0xD48000,(void *)ptr)
+
+// copies blit buffer to (80,60) on screen
+void blitBlitBuffer(void); 
+
+#define clearBlitBuffer() memset((void *)0xD40000,0,32*1024)
+ 
 // Fills edge buffer given points 
-void rasterize(Vec2 p0,Vec2 p1,Vec2 p2); 
-
-// Draws a textured(16x16) triangle 
-// disables interrupts
-void TexturedTriangle(Vec2 p0,Vec2 p1,Vec2 p2,uint8_t* texture); 
-
-// Draws a Gouraud shaded triagle 
-// disables interrupts
-void GouraudTriangle(Vec2 p0,Vec2 p1,Vec2 p2,uint8_t color0,uint8_t color1,uint8_t color2);  
+void rasterize(triangle_data_t* t); 
 
 #endif

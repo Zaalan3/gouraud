@@ -1,15 +1,18 @@
-// convpng v7.2
-// this file contains all the graphics sources for easy inclusion in a project
-#ifndef __tileset__
-#define __tileset__
-#include <stdint.h>
+#ifndef tileset_include_file
+#define tileset_include_file
 
-extern uint8_t tileset_tile_0_data[];
-#define tileset_tile_0 ((gfx_sprite_t*)tileset_tile_0_data)
-extern uint8_t tileset_tile_1_data[];
-#define tileset_tile_1 ((gfx_sprite_t*)tileset_tile_1_data)
-#define tileset_tiles_num 2
-extern uint8_t *tileset_tiles_data[2];
-#define tileset_tiles ((gfx_sprite_t**)tileset_tiles_data)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define tileset_width 256
+#define tileset_height 128
+#define tileset_size 32768
+#define tileset_compressed_size 242
+extern unsigned char tileset_compressed[242];
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
