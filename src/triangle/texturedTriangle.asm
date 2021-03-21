@@ -1,7 +1,8 @@
 public _TexturedTriangle
+public _renderTexturedShader
+public _endTexturedShader
 
 extern _edge 
-
 extern _DivideHLBC
 extern _MultiplyHLBC
 extern _fixedHLmulBC
@@ -10,6 +11,8 @@ width equ 160
 height equ 120 
 
 vram equ 0D40000h 
+
+fastRam equ 0E308C0h
 
 ;variables
 av equ ix-3 
@@ -56,8 +59,8 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dudx),hl 
-	ld (SMCLoadDUDX1+1),hl 
-	ld (SMCLoadDUDX2+1),hl 
+	ld (SMCLoadDUDX1 - _renderTexturedShader + 1 + fastRam),hl 
+	ld (SMCLoadDUDX2 - _renderTexturedShader + 1 + fastRam),hl 
 	; du/dy = -uw*c/Det
 	
 	ld hl,(uw) 
@@ -70,8 +73,8 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dudy),hl
-	ld (SMCLoadDUDY1+1),hl
-	ld (SMCLoadDUDY2+1),hl
+	ld (SMCLoadDUDY1 - _renderTexturedShader + 1 + fastRam),hl
+	ld (SMCLoadDUDY2 - _renderTexturedShader + 1 + fastRam),hl
 	
 	; dv/dx = -vh*b/Det
 	ld hl,(vh) 
@@ -84,8 +87,8 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dvdx),hl
-	ld (SMCLoadDVDX1+1),hl 
-	ld (SMCLoadDVDX2+1),hl
+	ld (SMCLoadDVDX1 - _renderTexturedShader + 1 + fastRam),hl
+	ld (SMCLoadDVDX2 - _renderTexturedShader + 1 + fastRam),hl
 	
 	; dv/dy = vh*a/Det
 	ld hl,(vh) 
@@ -94,9 +97,9 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC 
 	ld (dvdy),hl
-	ld (SMCLoadDVDY1+1),hl
-	ld (SMCLoadDVDY2+1),hl
-	computeuivi:
+	ld (SMCLoadDVDY1 - _renderTexturedShader + 1 + fastRam),hl
+	ld (SMCLoadDVDY2 - _renderTexturedShader + 1 + fastRam),hl
+computeuivi:
 	ld hl,(miny) 
 	ld de,(argy0) 
 	or a,a 
@@ -159,7 +162,11 @@ _TexturedTriangle:
 	
 	ld de,vram 	; texture area is upper half of page ( h = v + 0x80, l = u )
 	push ix 
-renderTriangle: 
+	
+	jp fastRam 
+	
+;-----------------------------------------------
+_renderTexturedShader: 
 yloop: 
 	ld a,(iy+0) 
 	ld l,a 		; x = start 
@@ -285,3 +292,6 @@ SMCLoadDVDY2:ld hl,0
 	inc h 
 	lea iy,iy+2 
 	jr endyloop
+	
+_endTexturedShader: 
+	nop 

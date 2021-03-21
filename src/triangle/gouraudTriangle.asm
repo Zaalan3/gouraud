@@ -1,4 +1,6 @@
 public _GouraudTriangle
+public _renderGouraudShader
+public _endGouraudShader
 
 extern _edge 
 extern _canvas_data
@@ -7,10 +9,13 @@ extern __frameset
 extern _DivideHLBC
 extern _MultiplyHLBC
 extern _fixedHLmulBC
+ 
 
 width equ 160
 height equ 120 
 vram equ 0D40000h 
+
+fastRam equ 0E30880h
 
 ;variables
 av equ ix-3 
@@ -126,7 +131,7 @@ computeui:
 	add hl,de 
 	ld (ui),hl 
 	
-renderTriangle:
+
 	; hl = edge pointer 
 	ld de,(miny) 
 	ld hl,_edge
@@ -148,8 +153,12 @@ renderTriangle:
 	; ix = ui 
 	push ix 
 	ld ix,(ui)
-	
 	exx 
+	
+	jp fastRam 
+	
+;-----------------------------------------------
+_renderGouraudShader:
 yloop: 
 	lea iy,ix+0 ; iy = ui
 	add ix,de	; ui += dudy 
@@ -203,4 +212,6 @@ skipxloop:
 	ld sp,ix 
 	pop ix 
 	ret 
-		
+_endGouraudShader: 
+	nop
+	
