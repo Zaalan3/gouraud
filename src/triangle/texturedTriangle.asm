@@ -46,7 +46,7 @@ v0 equ iy+23
 uw equ iy+24
 vh equ iy+27
 
-
+;98108 -> 96458
 _TexturedTriangle: 
 	
 	; du/dx = uw*d/Det
@@ -56,7 +56,8 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dudx),hl 
-	
+	ld (SMCLoadDUDX1+1),hl 
+	ld (SMCLoadDUDX2+1),hl 
 	; du/dy = -uw*c/Det
 	
 	ld hl,(uw) 
@@ -69,6 +70,8 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dudy),hl
+	ld (SMCLoadDUDY1+1),hl
+	ld (SMCLoadDUDY2+1),hl
 	
 	; dv/dx = -vh*b/Det
 	ld hl,(vh) 
@@ -81,6 +84,8 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dvdx),hl
+	ld (SMCLoadDVDX1+1),hl 
+	ld (SMCLoadDVDX2+1),hl
 	
 	; dv/dy = vh*a/Det
 	ld hl,(vh) 
@@ -89,7 +94,8 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC 
 	ld (dvdy),hl
-	
+	ld (SMCLoadDVDY1+1),hl
+	ld (SMCLoadDVDY2+1),hl
 	computeuivi:
 	ld hl,(miny) 
 	ld de,(argy0) 
@@ -119,7 +125,7 @@ _TexturedTriangle:
 	sbc hl,hl 
 	ld h,(u0) 
 	add hl,de 
-	ld (ui),hl
+	ld.sis sp,hl	; sps = ui	
 
 	pop hl 
 	ld bc,(dvdx) 
@@ -136,9 +142,10 @@ _TexturedTriangle:
 	ld h,(v0) 
 	set 7,h
 	add hl,de 
-	ld (vi),hl	
+	push hl 
+	pop bc	; bc = vi
+	exx 
 
-renderTriangle: 
 	ld de,(miny) 
 	ld a,(maxy) 
 	sub a,e 
@@ -149,6 +156,10 @@ renderTriangle:
 	ld iy,_edge ; iy = edge pointer
 	add iy,de
 	add iy,de
+	
+	ld de,vram 	; texture area is upper half of page ( h = v + 0x80, l = u )
+	push ix 
+renderTriangle: 
 yloop: 
 	ld a,(iy+0) 
 	ld l,a 		; x = start 
@@ -157,14 +168,38 @@ yloop:
 	jr z,skipLine	; zero/one pixel wide lines are skipped
 	ld b,a 	; b = x counter
 	ld a,l
-	exx 
-	
-	ld b,a 
-	; u = ui + dudx*start
-	ld hl,(dudx)
+	exx 	
+	pea iy+2
+	; v = vi + dvdx*start
+SMCLoadDVDX1:ld hl,0
 	ld d,l 
-	ld e,b 
-	ld l,b 
+	ld e,a
+	ld l,a 
+	mlt hl 
+	mlt de 
+	ex af,af' 
+	ld a,l 
+	add a,d 
+	ld d,a 
+	ld a,h 
+	rlca 
+	sbc hl,hl 
+	ld h,d 
+	ld l,e  
+	add hl,bc 
+	push hl 
+	pop iy 
+SMCLoadDVDY1:ld hl,0
+	add hl,bc 
+	push hl 
+	pop bc 
+	
+	ex af,af' 
+	; u = ui + dudx*start
+SMCLoadDUDX1:ld hl,0
+	ld d,l 
+	ld e,a
+	ld l,a 
 	mlt hl 
 	mlt de 
 	ld a,l 
@@ -175,55 +210,35 @@ yloop:
 	sbc hl,hl 
 	ld h,d 
 	ld l,e 
-	ld de,(ui) 
-	add hl,de 
-	ld (u),hl
-	ld hl,(dudy) 
-	add hl,de 
-	ld (ui),hl ; ui += dudy 
-	
-	; v = vi + dvdx*start
-	ld hl,(dvdx) 
-	ld d,l 
-	ld e,b 
-	ld l,b 
-	mlt hl 
-	mlt de 
-	ld a,l 
-	add a,d 
-	ld d,a 
-	ld a,h 
-	rlca 
+	ex de,hl 
+	or a,a 
 	sbc hl,hl 
-	ld h,d 
-	ld l,e  
-	ld de,(vi) 
+	add.sis hl,sp 
+	ex de,hl 
 	add hl,de 
-	ld (v),hl
-	ld hl,(dvdy) 
+	push hl 
+	pop ix
+SMCLoadDUDY1:ld hl,0
 	add hl,de 
-	ld (vi),hl ; vi += dvdy 
+	ld.sis sp,hl ; ui += dudy 
 	
-	ld bc,(dudx)
-	ld de,(dvdx)
+	or a,a 
+	sbc hl,hl
+	add hl,sp 
+SMCLoadDUDX2:ld sp,0
+SMCLoadDVDX2:ld de,0
 	
-	exx 
-	
-	ld de,vram 	; texture area is upper half of page ( h = v + 0x80, l = u )
-	push iy
-	push ix 
-	ld iy,(v) 
-	ld ix,(u) 
 	
 ;	de = texture  
 ;	hl = canvas 
 ;	b = x counter 
 ;	c = y counter 
-;	bc' = du/dx 
+;	bc' = vi
+;	sp' = du/dx 
 ;	de' = dv/dx 
 ;	ix = u 
 ;	iy = v 
-	
+	exx 
 xloop:  
 	ld d,iyh 
 	ld e,ixh 
@@ -231,41 +246,42 @@ xloop:
 	ld (hl),a 
 	inc l 
 	exx 
-	add ix,bc 
+	add ix,sp 
 	add iy,de 
 	exx 
 	djnz xloop 
 	
 cont: 
-	pop ix 
+	exx 
+	ld sp,hl 
+	exx 
 	pop iy
-	lea iy,iy+2
 	inc h ; y++ 
+	
+endyloop: 
 	dec c 
 	jr nz,yloop
 	
+	pop ix
 	ld sp,ix 
 	pop ix 
 	ret
 	
 skipLine: 
 	exx 
-	ld hl,(ui) 
-	ld de,(dudy) 
+	or a,a 
+	sbc hl,hl 
+	add.sis hl,sp 
+SMCLoadDUDY2:ld de,0
 	add hl,de 
-	ld (ui),hl 
+	ld.sis sp,hl 
 	
-	ld hl,(vi) 
-	ld de,(dvdy) 
-	add hl,de 
-	ld (vi),hl
+SMCLoadDVDY2:ld hl,0 
+	add hl,bc
+	push hl 
+	pop bc
 	
 	exx
 	inc h 
 	lea iy,iy+2 
-	dec c 
-	jp nz,yloop
-	
-	ld sp,ix 
-	pop ix 
-	ret 	
+	jr endyloop
