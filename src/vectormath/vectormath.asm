@@ -16,6 +16,7 @@ public _getReciprocal
 
 extern _fixedSinTable
 extern _recipTable
+extern _recipTable2
 
 
 ;------------------------------------------------
@@ -742,11 +743,13 @@ _fxSin:
 	
 ;------------------------------------------------
 ; returns the 8.16 reciprocal of 16-bit integer in HL 
-_getReciprocal: 
+_getReciprocal:
+	dec hl
 	ld a,h 
-	and a,0F0h 
+	tst a,0F0h 
 	jr nz,recipdiv ; do simple division if value is higher 0x0FFF 
-	
+	tst a,0Fh 
+	jr nz,recip2	; for hl>256
 	add hl,hl 
 	ld de,_recipTable 
 	add hl,de 
@@ -755,6 +758,17 @@ _getReciprocal:
 	sbc hl,hl 
 	ld h,d 
 	ld l,e 
+	ret 
+recip2: 
+	ld de,256
+	or a,a 
+	sbc hl,de 
+	ld de,_recipTable2
+	add hl,de 
+	ld a,(hl) 
+	or a,a 
+	sbc hl,hl 
+	ld l,a 
 	ret 
 
 recipdiv: 
