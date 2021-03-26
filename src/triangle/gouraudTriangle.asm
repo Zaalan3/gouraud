@@ -1,6 +1,7 @@
 public _GouraudTriangle
 public _renderGouraudShader
-public _endGouraudShader
+public _renderGouraudShader_src
+public _renderGouraudShader_len
 
 extern _edge 
 extern _canvas_data
@@ -9,13 +10,12 @@ extern __frameset
 extern _DivideHLBC
 extern _MultiplyHLBC
 extern _fixedHLmulBC
- 
 
 width equ 160
 height equ 120 
 vram equ 0D40000h 
 
-fastRam equ 0E30880h
+;fastRam equ 0E30880h
 
 ;variables
 av equ ix-3 
@@ -48,7 +48,6 @@ u0 equ iy+22
 v0 equ iy+23
 uw equ iy+24
 vh equ iy+27
-
 
 _GouraudTriangle: 
 	or a,a 
@@ -154,10 +153,10 @@ computeui:
 	push ix 
 	ld ix,(ui)
 	exx 
-	
-	jp fastRam 
+	jp _renderGouraudShader
 	
 ;-----------------------------------------------
+virtual at $E30920
 _renderGouraudShader:
 yloop: 
 	lea iy,ix+0 ; iy = ui
@@ -212,6 +211,11 @@ skipxloop:
 	ld sp,ix 
 	pop ix 
 	ret 
-_endGouraudShader: 
-	nop
-	
+
+assert $ < $E30960 ;change this if the relocated routine needs to change size
+load _renderGouraudShader_data: $-$$ from $$
+_renderGouraudShader_len := $-$$
+end virtual
+_renderGouraudShader_src:
+	db _renderGouraudShader_data
+

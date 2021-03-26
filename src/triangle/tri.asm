@@ -1,4 +1,5 @@
 public _blitBlitBuffer 
+
 public _initRasterizer
 
 extern _gfx_Begin 
@@ -7,9 +8,17 @@ extern _gfx_SwapDraw
 extern _gfx_SetDraw 
 
 extern _renderGouraudShader
-extern _endGouraudShader 
-extern _renderTexturedShader 
-extern _endTexturedShader
+extern _renderGouraudShader_src
+extern _renderGouraudShader_len
+extern _renderTexturedShader
+extern _renderTexturedShader_src
+extern _renderTexturedShader_len
+
+extern _fastram_malloc
+extern _fastram_init_malloc_cache
+extern __TexturedTriangle
+extern __GouraudTriangle
+extern _load_dynamic_routine
 
 vram equ 0D40000h 
 screen equ 0D52C00h 
@@ -27,20 +36,20 @@ _initRasterizer:
 	sbc	hl, hl
 	push	hl
 	call	_gfx_SetDraw
-	pop	hl
-	
-	; load shaders and rasterizer into fast ram
-	ld de,0E30880h 
-	ld hl,_renderGouraudShader
-	ld bc,_endGouraudShader - _renderGouraudShader
-	ldir 
-	
-	ld de,0E308C0h 
-	ld hl,_renderTexturedShader
-	ld bc,_endTexturedShader - _renderTexturedShader
+	pop bc
+
+	ld hl,_renderGouraudShader_src
+	ld bc,_renderGouraudShader_len
+	ld de,_renderGouraudShader
 	ldir
 	
+	ld hl,_renderTexturedShader_src
+	ld bc,_renderTexturedShader_len
+	ld de,_renderTexturedShader
+	ldir
+
 	ret
+
 
 ; blits buffer to (80,60) 
 _blitBlitBuffer:
