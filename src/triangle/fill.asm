@@ -1,8 +1,10 @@
 public _fill
 
 extern _edge 
-extern _DivideHLBC
+
 extern _MultiplyHLBC
+extern _getReciprocal
+extern _fixedHLmulBC
 
 width equ 160 
 height equ 120 
@@ -16,50 +18,47 @@ y1 equ (iy+9)
 ;in: a = 0 -> fill left buffer (  ) 
 ; OR a = 1 -> fill right buffer (  ) 
 ; bc = ptr to points
-;
+; Assumes no clipping right now.
 _fill: 
 	push iy 
 	push bc 
 	pop iy 
-	ld (SMCbuffer+2),a 
-	ld (SMCbuffer2+2),a
+	ld (SMCbuffer),a 
+	ld (SMCbuffer2),a
 dy: 
 	ld hl,(y1) 
 	ld de,(y0) 
 	or a,a 
 	sbc hl,de 
 	jp z,endfill
-	ex de,hl ; de = dy 
+	call _getReciprocal
+	push hl 
 dx: 
-	ld a,03h	; inc bc 
 	ld hl,(x1) 
 	ld bc,(x0) 
 	or a,a 
 	sbc hl,bc
-	jp z,straight 	; straight line special case 
-	jp p,positive 
-	ld a,0Bh	; dec bc 
-	push hl 
+	jp z,straight 	; straight line special case
 	pop bc 
-	or a,a 
-	sbc hl,hl 
-	sbc hl,bc ; negate dx 
-positive: 
-	ld (SMCxdir),a 
-	ld (SMCxdir2),a 
-	push hl 
-	pop bc ; bc = dx 
+	call _fixedHLmulBC  ; dx/dy 
+	ex hl,de 
 	
-	or a,a 
-	sbc hl,hl ; err = 0 
-	
+	ld hl,(x0)
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
+	add hl,hl
 	exx 
-	ld bc,(x0) 
+	
 	ld de,(y0) 
 	or a,a 
 	sbc hl,hl 
 	sbc hl,de 
-	jp p,find0 	; find line intersection with 0 if y0 < 0 
+	jp p,find0 	; find line intersection with 0 if y0 < 0
 	
 clipY1: 
 	push de 
@@ -75,81 +74,44 @@ noclip:
 ycounter: 
 	pop de 
 	sub a,e 	; a = y counter 
-	
+		
 	ld iy,_edge ; iy = edge pointer 
 	add iy,de
-	add iy,de
+	add iy,de 
+	
+	exx 
+	ld b,a 
 	
 yloop: 
-floorx: 
-	or a,a 
-	sbc hl,hl 
-	sbc hl,bc 
-	jp m,ceilx 
-	ld l,0 
-	jr SMCbuffer 
-ceilx: 
-	ld hl,width-1
-	sbc hl,hl 
-	sbc hl,bc 
-	jr nc,storeEdge 
-	ld l,width-1
-	jr SMCbuffer
-	
+	add hl,de
 storeEdge: 
-	ld l,c 
-SMCbuffer: ld (iy+0),l
-	lea iy,iy+2 
-	exx 
-	add hl,bc ; err += dx 
-xloop: 
-	or a,a 
-	sbc hl,de ; err -= dy  
-	jr c,endxloop ; stop if err < dy 
-	exx 
-SMCxdir: nop 	; x += xdir 
-	exx 
-	jr xloop 
-endxloop: 
-	add hl,de 
-	exx 
+	ld (iy+0),h
+SMCbuffer:=$-1 
+	lea iy,iy+2  
+	djnz yloop 
+endfill: 
+	pop iy 
+	ret 
 	
-	dec a 
-	jr nz,yloop
-	
-endfill:
-	pop iy
-	ret
-;-------------------------------------------
 find0: 
-	push bc 
 	exx 
-	push bc 
+	push de
 	exx 
 	pop bc 
-	call _MultiplyHLBC ; hl = dx*abs(y0)
-	pop bc 
+	call _MultiplyHLBC ; hl = (dx/dy)*abs(y0)
+	
 	push hl 
 	exx 
-	pop hl ; err = abs(dx)*y0
-	
-find0loop: 
-	or a,a 
-	sbc hl,de ; err -= dy  
-	jr c,endfind0 ; stop if err < dy 
-	exx 
-SMCxdir2: nop 	; x += xdir 
-	exx 
-	jr find0loop
-endfind0: 
-	add hl,de 
+	pop bc 
+	add hl,bc 
 	exx 
 	ld de,0 
 	jp clipY1
 	
 ;-------------------------------------------
-; special case for dx = 0 
+; special case for dx = 0 	
 straight: 	
+	pop bc 
 	ld bc,(x0) 
 	; clip y coordinates 
 s_clipy0: 
@@ -197,11 +159,11 @@ s_ceilx:
 s_storeEdge: 
 	ld l,c 
 	ld b,a
-SMCbuffer2: ld (iy+0),l ; store in edge buffer 
+s_loop:
+	ld (iy+0),l ; store in edge buffer 
+SMCbuffer2:=$-1 
 	lea iy,iy+2 
-	djnz SMCbuffer2
+	djnz s_loop
 	
 	pop iy
 	ret 
-	
-	

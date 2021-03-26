@@ -1,6 +1,6 @@
-public _blitBlitBuffer 
-
 public _initRasterizer
+public _blitCanvas
+public _clearCanvas 
 
 extern _gfx_Begin 
 extern _gfx_ZeroScreen 
@@ -52,7 +52,7 @@ _initRasterizer:
 
 
 ; blits buffer to (80,60) 
-_blitBlitBuffer:
+_blitCanvas:
 	ld a,height 
 	ld hl,vram
 	exx 
@@ -72,3 +72,13 @@ loop:
 	dec a 
 	jr nz,loop 
 	ret 
+	
+_clearCanvas: 
+	ld hl,vram 
+	ld de,vram+1 
+	ld bc,width*height - 1 
+	xor a,a 
+	ld (hl),a 
+	ldir 
+	ret
+	

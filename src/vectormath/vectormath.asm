@@ -1,3 +1,4 @@
+; for C usage 
 public _fxMul 
 public _fxDiv
 public _fxtoi 
@@ -5,12 +6,16 @@ public _sqrtInt
 public _normalize
 public _fxSin
 
+; for Assembly usage
 public _fixedHLmulBC
 public _fixedHLdivBC
 public _sqrtHL
-
 public _MultiplyHLBC 
 public _DivideHLBC 
+public _getReciprocal
+
+extern _fixedSinTable
+extern _recipTable
 
 
 ;------------------------------------------------
@@ -294,6 +299,7 @@ _DivideHLBC:
 
 	
 ;------------------------------------------------
+; converts 8.8 fixed point number to integer
 _fxtoi: 
 	pop bc 
 	inc sp 
@@ -308,10 +314,9 @@ _fxtoi:
 	ld h,d 
 	ld l,e 
 	ret 
-	
-	
-	
-	
+		
+;------------------------------------------------	
+;Multiplies two 8.8 fixed point numbers
 _fxMul: 
 	pop de 
 	pop hl 
@@ -660,8 +665,10 @@ Sqrt24Skip:
         djnz    Sqrt24Loop
         ex      de,hl
         ret
-		
 	
+;------------------------------------------------	
+; normalizes a vector 
+; returns length of original vector 
 _normalize: 
 	pop de 
 	pop iy 
@@ -690,47 +697,9 @@ _normalize:
 	pop iy 
 	
 	push hl 
-	push hl 
-	pop bc 
 	
-	ld de,65536 
-DivideDEBC:
-	xor	a,a
-	sbc	hl,hl
-	sbc	hl,bc
-	jp	p,nnext0
-	push	hl
-	pop	bc
-	inc	a
-nnext0:
-	or	a,a
-	sbc	hl,hl
-	sbc	hl,de
-	jp	m,nnext1
-	ex	de,hl
-	inc	a
-nnext1:
-	add	hl,de
-	rra
-	ld	a,24
-nloop:
-	ex	de,hl
-	adc	hl,hl
-	ex	de,hl
-	adc	hl,hl
-	add	hl,bc
-	jr	c,nspill
-	sbc	hl,bc
-nspill:
-	dec	a
-	jr	nz,nloop
-
-	ex	de,hl
-	adc	hl,hl
-	jr	c,enddiv
-	ex	de,hl
-	sbc	hl,hl
-	sbc	hl,de
+	call _getReciprocal
+	
 
 enddiv: 	
 	push hl 
@@ -759,7 +728,7 @@ _fxSin:
 	ld h,3
 	res 7,l 
 	mlt hl 
-	ld bc,fixedSinTable
+	ld bc,_fixedSinTable
 	add hl,bc 
 	ld hl,(hl)
 	
@@ -771,15 +740,35 @@ _fxSin:
 	sbc hl,de 
 	ret 
 	
+;------------------------------------------------
+; returns the 8.16 reciprocal of 16-bit integer in HL 
+_getReciprocal: 
+	ld a,h 
+	and a,0F0h 
+	jr nz,recipdiv ; do simple division if value is higher 0x0FFF 
 	
-fixedSinTable: 
-	emit 3: 0,6,13,19,25,31,38,44,50,56,62,68,74,80,86,92
-	emit 3: 98,104,109,115,121,126,132,137,142,147,152,157,162,167,172,177
-	emit 3: 181,185,190,194,198,202,206,209,213,216,220,223,226,229,231,234
-	emit 3: 237,239,241,243,245,247,248,250,251,252,253,254,255,255,256,256
-	emit 3: 256,256,255,255,254,253,252,251,250,248,247,245,243,241,239,237
-	emit 3: 234,231,229,226,223,220,216,213,209,206,202,198,194,190,185,181
-	emit 3: 177,172,167,162,157,152,147,142,137,132,126,121,115,109,104,98
-	emit 3: 92,86,80,74,68,62,56,50,44,38,31,25,19,13,6,0
-	
+	add hl,hl 
+	ld de,_recipTable 
+	add hl,de 
+	ld de,(hl) 
+	or a,a 
+	sbc hl,hl 
+	ld h,d 
+	ld l,e 
+	ret 
+
+recipdiv: 
+	ex hl,de 
+	xor a,a 
+	ld hl,65536
+rloop: 
+	inc a 
+	or a,a 
+	sbc hl,de 
+	jr nc,rloop
+	dec a 
+	or a,a 
+	sbc hl,hl 
+	ld l,a 
+	ret 
 	

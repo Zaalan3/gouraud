@@ -3,9 +3,11 @@ public _rasterize
 extern __frameset
 extern _MultiplyHLBC
 extern _DivideHLBC
+extern _getReciprocal
 extern _fill
 extern _TexturedTriangle
 extern _GouraudTriangle
+
 
 width equ 160 
 height equ 120 
@@ -93,21 +95,25 @@ findDeterminant:
 	or a,a 
 	sbc hl,de
 	
-	
+	jp p,positive 
 	;return if determinant negative(counterclockwise)? 
-	;ret z
-	
-	; find 65536/det  
-	push hl 
-	pop bc 
-	ld hl,65536
-	call _DivideHLBC
+	ex de,hl 
+	or a,a 
+	sbc hl,hl 
+	sbc hl,de 
+	call _getReciprocal
+	ex de,hl 
+	or a,a 
+	sbc hl,hl 
+	sbc hl,de 
 	ld (denom),hl 
-	
-	add hl,hl 
-	sbc a,a ; sign of determinant
-	
-	
+	ld a,0FFh 
+	jr copyvert
+positive: 
+	call _getReciprocal
+	ld (denom),hl 
+	xor a,a
+copyvert: 
 	; copy vertices for sorting 
 	ld de,(y0) 
 	ld hl,(x0) 
@@ -234,6 +240,7 @@ callShader:
 	cp a,typeGouraud 
 	jp z,_GouraudTriangle 
 	
+endUndefined:	
 	; return if shader undefined 
 	ld sp,ix 
 	pop ix 

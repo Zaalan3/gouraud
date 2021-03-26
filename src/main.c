@@ -28,7 +28,6 @@
 extern uint8_t edge[120*2];
 
 void main(void) {
-	uint8_t y = 0;
 	triangle_data_t tri0 = {TYPE_TEXTURED,{20,30},{50,20},{20,60},48,64,48,15,15,-15,-15}; 
 	triangle_data_t tri1 = {TYPE_GOURAUD,{10,90},{30,30},{45,20},32,50,48,0,15,15,-15};
 
@@ -48,12 +47,11 @@ void main(void) {
 		gfx_palette[i+32] = i;
 	} 
 	
-	
-	
+
 	startTimer(); 
 	rasterize(&tri0);
 	stopTimer(); 
-	blitBlitBuffer(); 
+	blitCanvas(); 
 	
 	gfx_SetTextXY(0,0);
 	gfx_PrintUInt(getTimer(),0);
@@ -67,13 +65,13 @@ void main(void) {
 	
 	
 	gfx_ZeroScreen(); 
-	clearBlitBuffer(); 
+	clearCanvas(); 
 	
 	startTimer(); 
 	rasterize(&tri1);
 	stopTimer();
 	
-	blitBlitBuffer();
+	blitCanvas();
 
 	gfx_SetTextXY(0,0);
 	gfx_PrintUInt(getTimer(),0);

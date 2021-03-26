@@ -22,9 +22,9 @@ void initRasterizer(void);
 #define loadTextureMapCompressed(ptr) zx7_Decompress((void *)0xD48000,(void *)ptr)
 
 // copies blit buffer to (80,60) on screen
-void blitBlitBuffer(void); 
+void blitCanvas(void); 
 
-#define clearBlitBuffer() memset((void *)0xD40000,0,32*1024)
+void clearCanvas(void);
  
 // Fills edge buffer given points 
 void rasterize(triangle_data_t* t); 
