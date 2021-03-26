@@ -1,6 +1,7 @@
 public _TexturedTriangle
 public _renderTexturedShader
-public _endTexturedShader
+public _renderTexturedShader_src
+public _renderTexturedShader_len
 
 extern _edge 
 extern _DivideHLBC
@@ -11,8 +12,6 @@ width equ 160
 height equ 120 
 
 vram equ 0D40000h 
-
-fastRam equ 0E308C0h
 
 ;variables
 av equ ix-3 
@@ -49,6 +48,7 @@ v0 equ iy+23
 uw equ iy+24
 vh equ iy+27
 
+
 ;98108 -> 96458
 _TexturedTriangle: 
 	
@@ -59,8 +59,8 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dudx),hl 
-	ld (SMCLoadDUDX1 - _renderTexturedShader + 1 + fastRam),hl 
-	ld (SMCLoadDUDX2 - _renderTexturedShader + 1 + fastRam),hl 
+	ld (SMCLoadDUDX1),hl
+	ld (SMCLoadDUDX2),hl 
 	; du/dy = -uw*c/Det
 	
 	ld hl,(uw) 
@@ -73,9 +73,9 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dudy),hl
-	ld (SMCLoadDUDY1 - _renderTexturedShader + 1 + fastRam),hl
-	ld (SMCLoadDUDY2 - _renderTexturedShader + 1 + fastRam),hl
-	
+	ld (SMCLoadDUDY1),hl
+	ld (SMCLoadDUDY2),hl
+
 	; dv/dx = -vh*b/Det
 	ld hl,(vh) 
 	ld bc,(bv) 
@@ -87,9 +87,9 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC
 	ld (dvdx),hl
-	ld (SMCLoadDVDX1 - _renderTexturedShader + 1 + fastRam),hl
-	ld (SMCLoadDVDX2 - _renderTexturedShader + 1 + fastRam),hl
-	
+	ld (SMCLoadDVDX1),hl
+	ld (SMCLoadDVDX2),hl
+
 	; dv/dy = vh*a/Det
 	ld hl,(vh) 
 	ld bc,(av) 
@@ -97,8 +97,9 @@ _TexturedTriangle:
 	ld bc,(denom)
 	call _fixedHLmulBC 
 	ld (dvdy),hl
-	ld (SMCLoadDVDY1 - _renderTexturedShader + 1 + fastRam),hl
-	ld (SMCLoadDVDY2 - _renderTexturedShader + 1 + fastRam),hl
+	ld (SMCLoadDVDY1),hl
+	ld (SMCLoadDVDY2),hl
+
 computeuivi:
 	ld hl,(miny) 
 	ld de,(argy0) 
@@ -162,10 +163,11 @@ computeuivi:
 	
 	ld de,vram 	; texture area is upper half of page ( h = v + 0x80, l = u )
 	push ix 
-	
-	jp fastRam 
-	
+
+	jp _renderTexturedShader
+
 ;-----------------------------------------------
+virtual at $E30880 ;assembler treats this code as having origin in fast ram
 _renderTexturedShader: 
 yloop: 
 	ld a,(iy+0) 
@@ -178,7 +180,8 @@ yloop:
 	exx 	
 	pea iy+2
 	; v = vi + dvdx*start
-SMCLoadDVDX1:ld hl,0
+	ld hl,0
+SMCLoadDVDX1:=$-3
 	ld d,l 
 	ld e,a
 	ld l,a 
@@ -196,14 +199,16 @@ SMCLoadDVDX1:ld hl,0
 	add hl,bc 
 	push hl 
 	pop iy 
-SMCLoadDVDY1:ld hl,0
+	ld hl,0
+SMCLoadDVDY1:=$-3
 	add hl,bc 
 	push hl 
 	pop bc 
 	
 	ex af,af' 
 	; u = ui + dudx*start
-SMCLoadDUDX1:ld hl,0
+	ld hl,0
+SMCLoadDUDX1:=$-3
 	ld d,l 
 	ld e,a
 	ld l,a 
@@ -225,15 +230,18 @@ SMCLoadDUDX1:ld hl,0
 	add hl,de 
 	push hl 
 	pop ix
-SMCLoadDUDY1:ld hl,0
+	ld hl,0
+SMCLoadDUDY1:=$-3
 	add hl,de 
 	ld.sis sp,hl ; ui += dudy 
 	
 	or a,a 
 	sbc hl,hl
 	add hl,sp 
-SMCLoadDUDX2:ld sp,0
-SMCLoadDVDX2:ld de,0
+	ld sp,0
+SMCLoadDUDX2:=$-3
+	ld de,0
+SMCLoadDVDX2:=$-3
 	
 	
 ;	de = texture  
@@ -279,11 +287,13 @@ skipLine:
 	or a,a 
 	sbc hl,hl 
 	add.sis hl,sp 
-SMCLoadDUDY2:ld de,0
+	ld de,0
+SMCLoadDUDY2:=$-3
 	add hl,de 
 	ld.sis sp,hl 
 	
-SMCLoadDVDY2:ld hl,0 
+	ld hl,0 
+SMCLoadDVDY2:=$-3
 	add hl,bc
 	push hl 
 	pop bc
@@ -292,6 +302,11 @@ SMCLoadDVDY2:ld hl,0
 	inc h 
 	lea iy,iy+2 
 	jr endyloop
-	
-_endTexturedShader: 
-	nop 
+
+assert $ < $E30920 ;change this if the relocated routine needs to change size
+
+load _renderTexturedShader_data: $-$$ from $$
+_renderTexturedShader_len:=$-$$
+end virtual
+_renderTexturedShader_src:
+	db _renderTexturedShader_data

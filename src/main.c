@@ -13,6 +13,7 @@
 #include <graphx.h>
 #include <keypadc.h>
 
+#include "asm/fast_sp.h"
 
 #include "triangle/tri.h" 
 #include "vectormath/vectormath.h"
@@ -30,7 +31,10 @@ void main(void) {
 	uint8_t y = 0;
 	triangle_data_t tri0 = {TYPE_TEXTURED,{20,30},{50,20},{20,60},48,64,48,15,15,-15,-15}; 
 	triangle_data_t tri1 = {TYPE_GOURAUD,{10,90},{30,30},{45,20},32,50,48,0,15,15,-15};
-	
+
+/* use tail of cursorImage for stack memory */
+	begin_fast_sp();
+
 	initRasterizer(); 
 	gfx_SetPalette(global_palette,sizeof_global_palette,0); 
 	loadTextureMapCompressed(tileset_compressed);
@@ -84,5 +88,9 @@ void main(void) {
 	
 	
 	gfx_End();
+
+/* restore stack pointer */
+	end_fast_sp();
+
 } 
 
