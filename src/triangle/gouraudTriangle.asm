@@ -156,7 +156,7 @@ computeui:
 	jp _renderGouraudShader
 	
 ;-----------------------------------------------
-virtual at $E30920
+virtual at $E30960
 _renderGouraudShader:
 yloop: 
 	lea iy,ix+0 ; iy = ui
@@ -192,17 +192,47 @@ yloop:
 	inc hl 
 	exx 
 	sub a,l 	; end - start -> x counter  
-	jr z,skipxloop
-	ld b,a 		; b = x counter 
+	jr z,skipline
 	
+	ld b,a 		; b = x counter 
+	ex af,af' 
+	ld a,00000011b  ; first 4 pixels 
+	and a,b
+	jr z,xusetup 
+	ld b,a  
 xloop: 
 	ld a,iyh ; plot color 
 	ld (hl),a
 	inc l 
 	add iy,de ; u += dudx 
 	djnz xloop 
-	
-skipxloop: 	
+
+xusetup:
+	ex af,af' 
+	srl a 
+	srl a 
+	jr z,skipline 
+	ld b,a ; count/4
+	push de
+	ex hl,de 
+	add hl,hl ; double du/dx 
+	ex hl,de 
+xunrolled: 
+	ld a,iyh 
+	ld (hl),a 
+	inc l 
+	ld (hl),a 
+	inc l 
+	add iy,de 
+	ld a,iyh 
+	ld (hl),a 
+	inc l 
+	ld (hl),a 
+	inc l 
+	add iy,de
+	djnz xunrolled
+	pop de
+skipline: 	
 	inc h ;y++
 	exx 
 	djnz yloop 
@@ -212,7 +242,7 @@ skipxloop:
 	pop ix 
 	ret 
 
-assert $ < $E30960 ;change this if the relocated routine needs to change size
+assert $ < $E309D0 ;change this if the relocated routine needs to change size
 load _renderGouraudShader_data: $-$$ from $$
 _renderGouraudShader_len := $-$$
 end virtual

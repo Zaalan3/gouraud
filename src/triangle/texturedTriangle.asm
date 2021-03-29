@@ -60,7 +60,9 @@ _TexturedTriangle:
 	call _fixedHLmulBC
 	ld (dudx),hl 
 	ld (SMCLoadDUDX1),hl
-	ld (SMCLoadDUDX2),hl 
+	ld (SMCLoadDUDX2),hl
+	add hl,hl
+	ld (SMCLoadDUDX3),hl 
 	; du/dy = -uw*c/Det
 	
 	ld hl,(uw) 
@@ -89,6 +91,8 @@ _TexturedTriangle:
 	ld (dvdx),hl
 	ld (SMCLoadDVDX1),hl
 	ld (SMCLoadDVDX2),hl
+	add hl,hl
+	ld (SMCLoadDVDX3),hl
 
 	; dv/dy = vh*a/Det
 	ld hl,(vh) 
@@ -174,7 +178,7 @@ yloop:
 	ld l,a 		; x = start 
 	ld a,(iy+1) ; a = x end
 	sub a,l 
-	jr z,skipLine	; zero/one pixel wide lines are skipped
+	jp z,skipLine	; zero/one pixel wide lines are skipped
 	ld b,a 	; b = x counter
 	ld a,l
 	exx 	
@@ -243,7 +247,6 @@ SMCLoadDUDX2:=$-3
 	ld de,0
 SMCLoadDVDX2:=$-3
 	
-	
 ;	de = texture  
 ;	hl = canvas 
 ;	b = x counter 
@@ -254,6 +257,12 @@ SMCLoadDVDX2:=$-3
 ;	ix = u 
 ;	iy = v 
 	exx 
+	ld a,b 
+	ex af,af' 
+	ld a,00000011b  ; first 4 pixels 
+	and a,b
+	jr z,xusetup 
+	ld b,a 
 xloop:  
 	ld d,iyh 
 	ld e,ixh 
@@ -265,6 +274,42 @@ xloop:
 	add iy,de 
 	exx 
 	djnz xloop 
+xusetup: 
+	ex af,af' 
+	srl a 
+	srl a 
+	jr z,cont  
+	ld b,a ; count/4
+	exx 
+	ld sp,0 	; doubled deltas
+SMCLoadDUDX3:=$-3	
+	ld de,0 
+SMCLoadDVDX3:=$-3
+	exx 
+xunrolled: 
+	ld d,iyh 
+	ld e,ixh 
+	ld a,(de) 
+	ld (hl),a 
+	inc l 
+	ld (hl),a 
+	inc l
+	exx 
+	add ix,sp 
+	add iy,de 
+	exx 
+	ld d,iyh 
+	ld e,ixh 
+	ld a,(de) 
+	ld (hl),a 
+	inc l 
+	ld (hl),a 
+	inc l
+	exx 
+	add ix,sp 
+	add iy,de 
+	exx
+	djnz xunrolled
 	
 cont: 
 	exx 
@@ -275,7 +320,7 @@ cont:
 	
 endyloop: 
 	dec c 
-	jr nz,yloop
+	jp NZ,yloop
 	
 	pop ix
 	ld sp,ix 
@@ -303,7 +348,7 @@ SMCLoadDVDY2:=$-3
 	lea iy,iy+2 
 	jr endyloop
 
-assert $ < $E30920 ;change this if the relocated routine needs to change size
+assert $ < $E30960 ;change this if the relocated routine needs to change size
 
 load _renderTexturedShader_data: $-$$ from $$
 _renderTexturedShader_len:=$-$$
