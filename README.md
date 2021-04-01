@@ -6,4 +6,4 @@ Linearly interpolates between palette entries(so make sure ramps are sequential 
 
 Compile using [the TI84+CE C Toolchain](https://github.com/CE-Programming/toolchain) 
 
-![](https://github.com/Zaalan3/Gouraud/blob/master/square.gif) 
+![](https://github.com/Zaalan3/Gouraud/blob/master/gouraud.png) 
