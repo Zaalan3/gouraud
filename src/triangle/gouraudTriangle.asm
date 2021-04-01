@@ -84,6 +84,10 @@ _GouraudTriangle:
 	ld bc,(denom) 
 	call _fixedHLmulBC
 	ld (dudx),hl 
+	ld (SMCLoadDUDX1),hl 
+	ld (SMCLoadDUDX2),hl 
+	add hl,hl 
+	ld (SMCLoadDUDX3),hl 
 	
 	; dudy = (dc2*av - dc1*cv)*denom 
 	ld hl,(dc1) 
@@ -128,9 +132,13 @@ computeui:
 	sbc hl,hl 
 	ld h,(l0) 
 	add hl,de 
-	ld (ui),hl 
+	push hl 
+	pop iy  ; iy = ui 
 	
-
+	; de' = canvas pointer 
+	ld de,vram 
+	ld d,(miny) 
+	exx
 	; hl = edge pointer 
 	ld de,(miny) 
 	ld hl,_edge
@@ -142,35 +150,31 @@ computeui:
 	ld b,a 
 	; de = dudy 
 	ld de,(dudy)
-	exx 
-	; hl' = canvas pointer 
-	ld hl,vram 
-	ld h,(miny) 
 	
-	; de' = dudx 
-	ld de,(dudx) 
-	; ix = ui 
-	push ix 
-	ld ix,(ui)
-	exx 
+	ld (SMCRestoreSP),sp 
+	
 	jp _renderGouraudShader
 	
 ;-----------------------------------------------
+;hl = edge pointer 
+;de = dudy 
+;b = y counter 
+;iy = ui
+;hl' = u 
+;de' = canvas pointer 
+;b' = x counter
 virtual at $E30960
 _renderGouraudShader:
 yloop: 
-	lea iy,ix+0 ; iy = ui
-	add ix,de	; ui += dudy 
 	ld a,(hl) ; start of line 
 	inc hl 
 	exx 
-	ld l,a 	; start of line offset 
+	ld e,a 	; start of line offset 
 	; u += start*dudx 
-	push hl 
 	push de 
-	ex de,hl 
+	ld hl,0 
+SMCLoadDUDX1:=$-3
 	ld d,l 
-	ld e,a 
 	ld l,a 
 	mlt hl 
 	mlt de 
@@ -182,65 +186,68 @@ yloop:
 	sbc hl,hl 
 	ld h,d 
 	ld l,e
-	ex de,hl 
-	add iy,de 
-	pop de 
-	pop hl
+	ex de,hl  
+	lea hl,iy+0
+	add hl,de 
+	pop de
 	
 	exx 
+	add iy,de	; ui += dudy 
 	ld a,(hl) 
 	inc hl 
 	exx 
-	sub a,l 	; end - start -> x counter  
+	sub a,e 	; end - start -> x counter  
 	jr z,skipline
-	
+	jp m,skipline
 	ld b,a 		; b = x counter 
 	ex af,af' 
 	ld a,00000011b  ; first 4 pixels 
 	and a,b
 	jr z,xusetup 
 	ld b,a  
+	ld sp,0 
+SMCLoadDUDX2:=$-3 
+
 xloop: 
-	ld a,iyh ; plot color 
-	ld (hl),a
-	inc l 
-	add iy,de ; u += dudx 
+	ld a,h 
+	ld (de),a 
+	inc de 
+	add hl,sp
 	djnz xloop 
 
 xusetup:
 	ex af,af' 
 	srl a 
 	srl a 
-	jr z,skipline 
+	jr z,skipxunrolled 
 	ld b,a ; count/4
-	push de
-	ex hl,de 
-	add hl,hl ; double du/dx 
-	ex hl,de 
+	ld sp,0 	; doubled delta
+SMCLoadDUDX3:=$-3 
 xunrolled: 
-	ld a,iyh 
-	ld (hl),a 
-	inc l 
-	ld (hl),a 
-	inc l 
-	add iy,de 
-	ld a,iyh 
-	ld (hl),a 
-	inc l 
-	ld (hl),a 
-	inc l 
-	add iy,de
+	ld a,h 
+	ld (de),a 
+	inc de 
+	ld (de),a 
+	inc de 
+	add hl,sp
+	ld a,h 
+	ld (de),a 
+	inc de 
+	ld (de),a 
+	inc de 
+	add hl,sp
 	djnz xunrolled
-	pop de
+skipxunrolled:
+	ld sp,0 
+SMCRestoreSP:=$-3 
 skipline: 	
-	inc h ;y++
-	exx 
+	inc d ;y++
+	exx
 	djnz yloop 
 	
-	pop ix 
 	ld sp,ix 
 	pop ix 
-	ret 
+	ret  
 
 assert $ < $E309D0 ;change this if the relocated routine needs to change size
 load _renderGouraudShader_data: $-$$ from $$
